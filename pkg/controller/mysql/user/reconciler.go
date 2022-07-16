@@ -306,7 +306,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		resourceOptions := fmt.Sprintf("WITH %s", strings.Join(ro, " "))
 
 		query := fmt.Sprintf(
-			"ALTER USER %s@%s %s",
+			"ALTER USER %s@%s %s; FLUSH PRIVILEGES;",
 			mysql.QuoteValue(username),
 			mysql.QuoteValue(host),
 			resourceOptions,
@@ -316,26 +316,16 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		}); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateUser)
 		}
-		if err := c.db.Exec(ctx, xsql.Query{
-			String: "FLUSH PRIVILEGES",
-		}); err != nil {
-			return managed.ExternalUpdate{}, errors.Wrap(err, errFlushPriv)
-		}
 
 		cr.Status.AtProvider.ResourceOptionsAsClauses = ro
 	}
 
 	if pwchanged {
-		query := fmt.Sprintf("ALTER USER %s@%s IDENTIFIED BY %s", mysql.QuoteValue(username), mysql.QuoteValue(host), mysql.QuoteValue(pw))
+		query := fmt.Sprintf("ALTER USER %s@%s IDENTIFIED BY %s;FLUSH PRIVILEGES;", mysql.QuoteValue(username), mysql.QuoteValue(host), mysql.QuoteValue(pw))
 		if err := c.db.Exec(ctx, xsql.Query{
 			String: query,
 		}); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateUser)
-		}
-		if err := c.db.Exec(ctx, xsql.Query{
-			String: "FLUSH PRIVILEGES",
-		}); err != nil {
-			return managed.ExternalUpdate{}, errors.Wrap(err, errFlushPriv)
 		}
 
 		return managed.ExternalUpdate{
