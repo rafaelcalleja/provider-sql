@@ -52,7 +52,7 @@ func DSN(username, password, endpoint, port, tls string) string {
 	// This will ensure that any special characters in the username or password
 	// are percent-encoded for use in the user info portion of the DSN URL
 	userInfo := url.UserPassword(username, password)
-	return fmt.Sprintf("%s@tcp(%s:%s)/?tls=%s",
+	return fmt.Sprintf("%s@tcp(%s:%s)/?tls=%s&multiStatements=true",
 		userInfo,
 		endpoint,
 		port,
